@@ -33,13 +33,17 @@ class EmptyStateWidget extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppColors.primary.withOpacity(0.2),
-                  AppColors.secondary.withOpacity(0.2),
+                  Theme.of(context).primaryColor.withOpacity(0.2),
+                  Theme.of(context).primaryColor.withOpacity(0.1),
                 ],
               ),
             ),
             child: Center(
-              child: Icon(Icons.search, size: 60, color: AppColors.primary),
+              child: Icon(
+                Icons.search,
+                size: 60,
+                color: Theme.of(context).primaryColor,
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -50,7 +54,9 @@ class EmptyStateWidget extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.textDark,
+              color:
+                  Theme.of(context).textTheme.headlineSmall?.color ??
+                  Colors.black,
             ),
           ),
           const SizedBox(height: 8),
@@ -64,7 +70,9 @@ class EmptyStateWidget extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
-                color: AppColors.textGrey,
+                color:
+                    Theme.of(context).textTheme.bodyMedium?.color ??
+                    Colors.grey,
                 height: 1.5,
               ),
             ),
@@ -78,7 +86,7 @@ class EmptyStateWidget extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: onAction,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: Theme.of(context).primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

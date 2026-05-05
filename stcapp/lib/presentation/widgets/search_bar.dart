@@ -27,24 +27,27 @@ class SearchBar extends StatelessWidget {
               onChanged: onChanged,
               decoration: InputDecoration(
                 hintText: hintText ?? 'Search places...',
-                prefixIcon: const Icon(Icons.search, color: AppColors.textGrey),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Theme.of(context).hintColor,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.divider),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.divider),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: AppColors.primary,
+                  borderSide: BorderSide(
+                    color: Theme.of(context).primaryColor,
                     width: 2,
                   ),
                 ),
                 filled: true,
-                fillColor: AppColors.white,
+                fillColor: Theme.of(context).cardColor,
               ),
             ),
           ),
@@ -54,11 +57,14 @@ class SearchBar extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.divider),
+                border: Border.all(color: Theme.of(context).dividerColor),
               ),
-              child: const Icon(Icons.tune, color: AppColors.textDark),
+              child: Icon(
+                Icons.tune,
+                color: Theme.of(context).iconTheme.color ?? Colors.black,
+              ),
             ),
           ),
         ],

@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/models/place_model.dart';
 import '../../core/constants/app_colors.dart';
 
-class PlaceCard extends StatelessWidget {
+class PlaceCard extends StatefulWidget {
   final PlaceModel place;
   final VoidCallback onTap;
   final VoidCallback onFavoriteTap;
@@ -16,14 +16,62 @@ class PlaceCard extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<PlaceCard> createState() => _PlaceCardState();
+}
+
+class _PlaceCardState extends State<PlaceCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void didUpdateWidget(PlaceCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Trigger animation when favourite status changes
+    if (widget.place.isFavorite != oldWidget.place.isFavorite &&
+        widget.place.isFavorite) {
+      _animationController.forward().then((_) {
+        _animationController.reverse();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _onFavoriteTap() {
+    if (!widget.place.isFavorite) {
+      _animationController.forward().then((_) {
+        _animationController.reverse();
+      });
+    }
+    widget.onFavoriteTap();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          color: AppColors.white,
+          color: Theme.of(context).cardColor,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
@@ -41,9 +89,9 @@ class PlaceCard extends StatelessWidget {
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
               ),
-              child: place.thumbnailUrl != null
+              child: widget.place.thumbnailUrl != null
                   ? CachedNetworkImage(
-                      imageUrl: place.thumbnailUrl!,
+                      imageUrl: widget.place.thumbnailUrl!,
                       height: 280,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -113,14 +161,14 @@ class PlaceCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              place.title,
+                              widget.place.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              place.location,
+                              widget.place.location,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.bodySmall,
@@ -129,15 +177,18 @@ class PlaceCard extends StatelessWidget {
                         ),
                       ),
                       GestureDetector(
-                        onTap: onFavoriteTap,
-                        child: Icon(
-                          place.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: place.isFavorite
-                              ? AppColors.secondary
-                              : AppColors.textGrey,
-                          size: 24,
+                        onTap: _onFavoriteTap,
+                        child: ScaleTransition(
+                          scale: _scaleAnimation,
+                          child: Icon(
+                            widget.place.isFavorite
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: widget.place.isFavorite
+                                ? AppColors.secondary
+                                : AppColors.textGrey,
+                            size: 24,
+                          ),
                         ),
                       ),
                     ],
@@ -145,7 +196,7 @@ class PlaceCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   // Description
                   Text(
-                    place.description,
+                    widget.place.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall,
