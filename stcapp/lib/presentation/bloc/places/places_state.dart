@@ -20,11 +20,16 @@ class PlacesLoading extends PlacesState {
 class PlacesLoaded extends PlacesState {
   final List<PlaceModel> places;
   final String location;
+  final bool isOffline;
 
-  const PlacesLoaded({required this.places, required this.location});
+  const PlacesLoaded({
+    required this.places,
+    required this.location,
+    this.isOffline = false,
+  });
 
   @override
-  List<Object?> get props => [places, location];
+  List<Object?> get props => [places, location, isOffline];
 }
 
 class PlacesError extends PlacesState {

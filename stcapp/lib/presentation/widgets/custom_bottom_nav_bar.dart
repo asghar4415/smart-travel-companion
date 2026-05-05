@@ -43,50 +43,67 @@ class CustomBottomNavBar extends StatelessWidget {
               ),
             ],
           ),
-          child: BottomNavigationBar(
-            currentIndex: currentIndex,
-            onTap: onTap,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: bgColor, // Updated
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: unselectedColor, // Updated
-            elevation: 0,
-            items: [
-              BottomNavigationBarItem(
-                icon: Icon(
-                  currentIndex == 0 ? Icons.home : Icons.home_outlined,
-                ),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(currentIndex == 1 ? Icons.map : Icons.map_outlined),
-                label: 'Map',
-              ),
-              BottomNavigationBarItem(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              visualDensity: const VisualDensity(horizontal: 0, vertical: -4),
+            ),
+            child: BottomNavigationBar(
+              currentIndex: currentIndex,
+              onTap: onTap,
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: bgColor, // Updated
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: unselectedColor, // Updated
+              elevation: 0,
+              items: [
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    currentIndex == 0 ? Icons.home : Icons.home_outlined,
                   ),
-                  // Keeping white here because it sits on top of the primary purple color
-                  child: const Icon(Icons.add, color: AppColors.white),
+                  label: 'Home',
                 ),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(
-                  currentIndex == 3 ? Icons.favorite : Icons.favorite_border,
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    currentIndex == 1 ? Icons.map : Icons.map_outlined,
+                  ),
+                  label: 'Map',
                 ),
-                label: 'Favorites',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(
-                  currentIndex == 4 ? Icons.person : Icons.person_outline,
+                BottomNavigationBarItem(
+                  icon: Transform.translate(
+                    offset: const Offset(0, -20),
+                    child: Container(
+                      padding: const EdgeInsets.all(11),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      // Keeping white here because it sits on top of the primary color
+                      child: const Icon(Icons.add, color: AppColors.white),
+                    ),
+                  ),
+                  label: '',
                 ),
-                label: 'Profile',
-              ),
-            ],
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    currentIndex == 3 ? Icons.favorite : Icons.favorite_border,
+                  ),
+                  label: 'Favorites',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    currentIndex == 4 ? Icons.person : Icons.person_outline,
+                  ),
+                  label: 'Profile',
+                ),
+              ],
+            ),
           ),
         );
       },

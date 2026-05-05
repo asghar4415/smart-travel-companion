@@ -65,6 +65,9 @@ dependencies:
   # Toast/Snackbar
   fluttertoast: ^8.2.4
 
+  # External links / deep links
+  url_launcher: ^6.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

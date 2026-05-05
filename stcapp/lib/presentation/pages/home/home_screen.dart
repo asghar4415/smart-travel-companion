@@ -15,6 +15,7 @@ import '../../../core/constants/app_constants.dart';
 import '../details/details_screen.dart';
 import '../search/search_filter_screen.dart';
 import '../favourites/favourites_screen.dart';
+import 'notifications_screen.dart';
 import '../../../domain/entities/search_filter.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -248,7 +249,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              // Handle notifications
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const NotificationsScreen(),
+                                ),
+                              );
                             },
                             child: Icon(
                               Icons.notifications_outlined,
@@ -299,6 +306,55 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
+                      ),
+                      const SizedBox(height: 10),
+                      BlocBuilder<PlacesBloc, PlacesState>(
+                        builder: (context, state) {
+                          if (state is PlacesLoaded && state.isOffline) {
+                            return Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.warning.withValues(
+                                  alpha: 0.12,
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: AppColors.warning.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.wifi_off_rounded,
+                                    size: 18,
+                                    color: AppColors.warning,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'You are offline. Showing cached destinations.',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: AppColors.warning,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return const SizedBox.shrink();
+                        },
                       ),
                     ],
                   ),

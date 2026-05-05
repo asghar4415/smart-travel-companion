@@ -3,9 +3,17 @@ import '../../core/utils/exception_handler.dart';
 import '../../core/utils/geocode_helper.dart';
 import '../datasources/places_data_source.dart';
 import '../models/place_model.dart';
+import '../models/places_response_model.dart';
+
+class PlacesFetchResult {
+  final List<PlaceModel> places;
+  final bool isFromCache;
+
+  const PlacesFetchResult({required this.places, required this.isFromCache});
+}
 
 abstract class PlacesRepository {
-  Future<Either<AppException, List<PlaceModel>>> getPlaces(String location);
+  Future<Either<AppException, PlacesFetchResult>> getPlaces(String location);
 }
 
 class PlacesRepositoryImpl implements PlacesRepository {
@@ -14,17 +22,13 @@ class PlacesRepositoryImpl implements PlacesRepository {
   PlacesRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<AppException, List<PlaceModel>>> getPlaces(
+  Future<Either<AppException, PlacesFetchResult>> getPlaces(
     String location,
   ) async {
-    try {
-      final response = await remoteDataSource.getPlaces(location);
-
-      // Get default coordinates for the location
+    List<PlaceModel> mapResponseToPlaces(PlacesResponseModel responseModel) {
       final locationCoordinates = GeocodeHelper.getCoordinates(location);
 
-      final places = response.destinations.map((destination) {
-        // Try to get coordinates for the specific place first
+      return responseModel.destinations.map((destination) {
         final placeCoordinates =
             GeocodeHelper.getCoordinates(destination.title) ??
             locationCoordinates;
@@ -34,21 +38,31 @@ class PlacesRepositoryImpl implements PlacesRepository {
           location: location,
           description: destination.description,
           thumbnailUrl: destination.thumbnail,
-          flightPrice: destination.flightPrice,
-          extractedFlightPrice: destination.extractedFlightPrice,
-          hotelPrice: destination.hotelPrice,
-          extractedHotelPrice: destination.extractedHotelPrice,
-          link: destination.link,
           latitude: placeCoordinates?.latitude,
           longitude: placeCoordinates?.longitude,
         );
       }).toList();
+    }
 
-      return Right(places);
-    } on AppException catch (e) {
-      return Left(e);
-    } catch (e) {
-      return Left(AppException(message: 'An unexpected error occurred: $e'));
+    try {
+      final response = await remoteDataSource.getPlaces(location);
+      final places = mapResponseToPlaces(response);
+      return Right(PlacesFetchResult(places: places, isFromCache: false));
+    } catch (_) {
+      try {
+        final cachedResponse = await remoteDataSource.getCachedPlaces(location);
+        final cachedPlaces = mapResponseToPlaces(cachedResponse);
+        return Right(
+          PlacesFetchResult(places: cachedPlaces, isFromCache: true),
+        );
+      } catch (_) {
+        return Left(
+          AppException(
+            message:
+                'Unable to fetch places and no cached data is available for $location.',
+          ),
+        );
+      }
     }
   }
 }

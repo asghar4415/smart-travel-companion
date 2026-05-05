@@ -21,7 +21,10 @@ Future<void> setupServiceLocator() async {
 
   // Data Sources
   getIt.registerSingleton<PlacesDataSource>(
-    PlacesDataSourceImpl(client: getIt<http.Client>()),
+    PlacesDataSourceImpl(
+      client: getIt<http.Client>(),
+      sharedPreferences: getIt<SharedPreferences>(),
+    ),
   );
 
   getIt.registerSingleton<FavoritesLocalDataSource>(

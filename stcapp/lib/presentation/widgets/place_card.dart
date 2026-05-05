@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/models/place_model.dart';
 import '../../core/constants/app_colors.dart';
@@ -90,37 +91,70 @@ class _PlaceCardState extends State<PlaceCard>
                 topRight: Radius.circular(12),
               ),
               child: widget.place.thumbnailUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: widget.place.thumbnailUrl!,
+                  ? SizedBox(
                       height: 280,
                       width: double.infinity,
-                      fit: BoxFit.cover,
-                      filterQuality: FilterQuality.high,
-                      placeholder: (context, url) => Container(
-                        height: 280,
-                        color: AppColors.shimmerBase,
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.primary,
-                            strokeWidth: 2,
-                          ),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        height: 280,
-                        color: AppColors.background,
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      child: ClipRect(
+                        child: Stack(
+                          fit: StackFit.expand,
                           children: [
-                            Icon(
-                              Icons.image_not_supported,
-                              color: AppColors.textGrey,
-                              size: 48,
+                            // Subtle smoothing filter to reduce blocky pixelation
+                            ImageFiltered(
+                              imageFilter: ImageFilter.blur(
+                                sigmaX: 0.3,
+                                sigmaY: 0.3,
+                              ),
+                              child: CachedNetworkImage(
+                                imageUrl: widget.place.thumbnailUrl!,
+                                fit: BoxFit.cover,
+                                filterQuality: FilterQuality.high,
+                                fadeInDuration: const Duration(
+                                  milliseconds: 350,
+                                ),
+                                placeholder: (context, url) => Container(
+                                  color: AppColors.shimmerBase,
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.primary,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  color: AppColors.background,
+                                  child: const Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.image_not_supported,
+                                        color: AppColors.textGrey,
+                                        size: 48,
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'Image unavailable',
+                                        style: TextStyle(
+                                          color: AppColors.textGrey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Image unavailable',
-                              style: TextStyle(color: AppColors.textGrey),
+
+                            // Gradient overlay to mask artifacts and improve contrast for text
+                            Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Color(0x55000000),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         ),

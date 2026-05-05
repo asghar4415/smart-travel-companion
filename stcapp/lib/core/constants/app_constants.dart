@@ -13,6 +13,12 @@ class AppConstants {
     'India',
     'Pakistan',
     'China',
+    'Turkey',
+    'Italy',
+    'Spain',
+    'France',
+    'Thailand',
+    'Japan',
   ];
 
   // Default Search Query

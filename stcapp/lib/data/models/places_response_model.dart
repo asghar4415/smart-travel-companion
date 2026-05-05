@@ -36,47 +36,23 @@ class PlacesResponseModel extends Equatable {
 
 class Destination extends Equatable {
   final String title;
-  final String? link;
   final String description;
-  final String? flightPrice;
-  final int? extractedFlightPrice;
-  final String? hotelPrice;
-  final int? extractedHotelPrice;
   final String? thumbnail;
 
   const Destination({
     required this.title,
-    this.link,
     required this.description,
-    this.flightPrice,
-    this.extractedFlightPrice,
-    this.hotelPrice,
-    this.extractedHotelPrice,
     this.thumbnail,
   });
 
   factory Destination.fromJson(Map<String, dynamic> json) {
     return Destination(
       title: json['title'] as String? ?? 'Unknown',
-      link: json['link'] as String?,
       description: json['description'] as String? ?? 'No description',
-      flightPrice: json['flight_price'] as String?,
-      extractedFlightPrice: json['extracted_flight_price'] as int?,
-      hotelPrice: json['hotel_price'] as String?,
-      extractedHotelPrice: json['extracted_hotel_price'] as int?,
       thumbnail: json['thumbnail'] as String?,
     );
   }
 
   @override
-  List<Object?> get props => [
-    title,
-    link,
-    description,
-    flightPrice,
-    extractedFlightPrice,
-    hotelPrice,
-    extractedHotelPrice,
-    thumbnail,
-  ];
+  List<Object?> get props => [title, description, thumbnail];
 }

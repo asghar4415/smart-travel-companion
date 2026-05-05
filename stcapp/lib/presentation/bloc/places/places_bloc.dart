@@ -28,7 +28,12 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
     final result = await repository.getPlaces(event.location);
 
     if (result.isRight()) {
-      final places = result.fold((_) => <PlaceModel>[], (p) => p);
+      final fetchResult = result.fold(
+        (_) =>
+            const PlacesFetchResult(places: <PlaceModel>[], isFromCache: false),
+        (data) => data,
+      );
+      final places = fetchResult.places;
 
       if (places.isEmpty) {
         emit(
@@ -48,7 +53,11 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
         }
 
         emit(
-          PlacesLoaded(places: placesWithFavStatus, location: event.location),
+          PlacesLoaded(
+            places: placesWithFavStatus,
+            location: event.location,
+            isOffline: fetchResult.isFromCache,
+          ),
         );
       }
     } else {
@@ -92,6 +101,7 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
             PlacesLoaded(
               places: updatedPlaces,
               location: currentState.location,
+              isOffline: currentState.isOffline,
             ),
           );
         } catch (e) {
@@ -115,21 +125,39 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
     emit(const PlacesLoading());
 
     var allPlaces = <PlaceModel>[];
+    var isOffline = false;
 
     // If region filter is selected, fetch from those regions
     if (event.filter.selectedRegions.isNotEmpty) {
       for (final region in event.filter.selectedRegions) {
         final result = await repository.getPlaces(region);
         if (result.isRight()) {
-          final places = result.fold((_) => <PlaceModel>[], (p) => p);
-          allPlaces.addAll(places);
+          final fetchResult = result.fold(
+            (_) => const PlacesFetchResult(
+              places: <PlaceModel>[],
+              isFromCache: false,
+            ),
+            (data) => data,
+          );
+          allPlaces.addAll(fetchResult.places);
+          if (fetchResult.isFromCache) {
+            isOffline = true;
+          }
         }
       }
     } else {
       // Otherwise, fetch from the current location
       final result = await repository.getPlaces(event.location);
       if (result.isRight()) {
-        allPlaces = result.fold((_) => <PlaceModel>[], (p) => p);
+        final fetchResult = result.fold(
+          (_) => const PlacesFetchResult(
+            places: <PlaceModel>[],
+            isFromCache: false,
+          ),
+          (data) => data,
+        );
+        allPlaces = fetchResult.places;
+        isOffline = fetchResult.isFromCache;
       } else {
         final exception = result.fold(
           (exception) => exception,
@@ -182,25 +210,13 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
           .toList();
     }
 
-    // Sort results
+    // Sort results (price sorting removed since price fields were removed)
     switch (event.filter.sortBy) {
-      case SortBy.priceHighToLow:
-        filteredPlaces.sort(
-          (a, b) => (b.extractedFlightPrice ?? 0).compareTo(
-            a.extractedFlightPrice ?? 0,
-          ),
-        );
-        break;
-      case SortBy.priceLowToHigh:
-        filteredPlaces.sort(
-          (a, b) => (a.extractedFlightPrice ?? 0).compareTo(
-            b.extractedFlightPrice ?? 0,
-          ),
-        );
-        break;
       case SortBy.recommended:
       case SortBy.rating:
-        // Keep original order (recommended)
+      case SortBy.priceHighToLow:
+      case SortBy.priceLowToHigh:
+        // Keep original order
         break;
     }
 
@@ -213,6 +229,7 @@ class PlacesBloc extends Bloc<PlacesEvent, PlacesState> {
           location: event.filter.selectedRegions.isNotEmpty
               ? event.filter.selectedRegions.join(', ')
               : event.location,
+          isOffline: isOffline,
         ),
       );
     }

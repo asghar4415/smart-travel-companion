@@ -9,6 +9,7 @@ import '../../bloc/theme/theme_bloc.dart';
 import '../../bloc/theme/theme_state.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class DetailsScreen extends StatefulWidget {
   final PlaceModel place;
@@ -92,6 +93,34 @@ class _DetailsScreenState extends State<DetailsScreen>
       isFavorite = !isFavorite;
     });
     // TODO: Implement BLoC event to update favorite status
+  }
+
+  Future<void> _openInMap() async {
+    final latitude = widget.place.latitude;
+    final longitude = widget.place.longitude;
+
+    Uri mapsUri;
+    if (latitude != null && longitude != null) {
+      mapsUri = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
+      );
+    } else {
+      final encodedName = Uri.encodeComponent(widget.place.title);
+      mapsUri = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=$encodedName',
+      );
+    }
+
+    final launched = await launchUrl(
+      mapsUri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open map application.')),
+      );
+    }
   }
 
   @override
@@ -407,14 +436,7 @@ class _DetailsScreenState extends State<DetailsScreen>
                           child: SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: () {
-                                // TODO: Implement map navigation
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Map view coming soon!'),
-                                  ),
-                                );
-                              },
+                              onPressed: _openInMap,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                                 padding: const EdgeInsets.symmetric(
