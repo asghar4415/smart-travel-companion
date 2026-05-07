@@ -78,7 +78,7 @@ class _SidebarState extends State<Sidebar> {
                           child: Center(
                             child: ClipOval(
                               child: Image.asset(
-                                'images/character-img.webp',
+                                'assets/images/character-img.webp',
                                 fit: BoxFit.cover,
                                 height: 65,
                                 width: 65,

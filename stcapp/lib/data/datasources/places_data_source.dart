@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/places_response_model.dart';
 import '../../core/constants/app_constants.dart';
 
@@ -21,12 +22,26 @@ class PlacesDataSourceImpl implements PlacesDataSource {
   @override
   Future<PlacesResponseModel> getPlaces(String location) async {
     try {
-      // Using proxy server for CORS support on web
-      final queryParams = {'location': location};
+      // Build SerpAPI query. For web, calling SerpAPI directly may trigger
+      // CORS errors in the browser; mobile platforms do not enforce CORS.
+      final query = '$location Destinations';
 
-      final uri = Uri.parse(
-        AppConstants.apiBaseUrl,
-      ).replace(queryParameters: queryParams);
+      final uri = Uri.parse(AppConstants.apiBaseUrl).replace(
+        queryParameters: {
+          'engine': 'google',
+          'q': query,
+          'api_key': AppConstants.apiKey,
+        },
+      );
+
+      if (kIsWeb) {
+        // On web we avoid crashing; surface a clear error so UI can show
+        // instructions to run a proxy. The app is expected to call SerpAPI
+        // directly on Android/iOS where CORS isn't enforced.
+        throw Exception(
+          'CORS: direct SerpAPI calls are blocked in browsers. Run a proxy for web builds.',
+        );
+      }
 
       final response = await client
           .get(uri)
