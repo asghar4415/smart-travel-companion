@@ -25,33 +25,37 @@ class PlacesRepositoryImpl implements PlacesRepository {
   Future<Either<AppException, PlacesFetchResult>> getPlaces(
     String location,
   ) async {
-    List<PlaceModel> mapResponseToPlaces(PlacesResponseModel responseModel) {
-      final locationCoordinates = GeocodeHelper.getCoordinates(location);
+    Future<List<PlaceModel>> mapResponseToPlaces(
+      PlacesResponseModel responseModel,
+    ) async {
+      final locationCoordinates = await GeocodeHelper.getCoordinates(location);
 
-      return responseModel.destinations.map((destination) {
-        final placeCoordinates =
-            GeocodeHelper.getCoordinates(destination.title) ??
-            locationCoordinates;
+      return Future.wait(
+        responseModel.destinations.map((destination) async {
+          final placeCoordinates =
+              await GeocodeHelper.getCoordinates(destination.title) ??
+              locationCoordinates;
 
-        return PlaceModel(
-          title: destination.title,
-          location: location,
-          description: destination.description,
-          thumbnailUrl: destination.thumbnail,
-          latitude: placeCoordinates?.latitude,
-          longitude: placeCoordinates?.longitude,
-        );
-      }).toList();
+          return PlaceModel(
+            title: destination.title,
+            location: location,
+            description: destination.description,
+            thumbnailUrl: destination.thumbnail,
+            latitude: placeCoordinates?.latitude,
+            longitude: placeCoordinates?.longitude,
+          );
+        }),
+      );
     }
 
     try {
       final response = await remoteDataSource.getPlaces(location);
-      final places = mapResponseToPlaces(response);
+      final places = await mapResponseToPlaces(response);
       return Right(PlacesFetchResult(places: places, isFromCache: false));
     } catch (_) {
       try {
         final cachedResponse = await remoteDataSource.getCachedPlaces(location);
-        final cachedPlaces = mapResponseToPlaces(cachedResponse);
+        final cachedPlaces = await mapResponseToPlaces(cachedResponse);
         return Right(
           PlacesFetchResult(places: cachedPlaces, isFromCache: true),
         );

@@ -58,8 +58,12 @@ class _DetailsScreenState extends State<DetailsScreen>
 
   Future<void> _fetchWeather() async {
     if (widget.place.latitude == null || widget.place.longitude == null) {
+      if (!mounted) return;
+
       setState(() {
-        weatherError = 'Location coordinates not available';
+        weather = null;
+        isLoadingWeather = false;
+        weatherError = 'Weather is unavailable for this place.';
       });
       return;
     }
@@ -69,22 +73,30 @@ class _DetailsScreenState extends State<DetailsScreen>
       weatherError = null;
     });
 
+    final weatherDataSource = WeatherDataSource(client: http.Client());
+
     try {
-      final weatherDataSource = WeatherDataSource(client: http.Client());
       final fetchedWeather = await weatherDataSource.getWeather(
         latitude: widget.place.latitude!,
         longitude: widget.place.longitude!,
       );
 
+      if (!mounted) return;
+
       setState(() {
         weather = fetchedWeather;
         isLoadingWeather = false;
       });
-    } catch (e) {
+    } catch (_) {
+      if (!mounted) return;
+
       setState(() {
-        weatherError = 'Failed to load weather: $e';
+        weather = null;
+        weatherError = 'Weather data is currently unavailable. Pull to retry.';
         isLoadingWeather = false;
       });
+    } finally {
+      weatherDataSource.client.close();
     }
   }
 
@@ -367,12 +379,36 @@ class _DetailsScreenState extends State<DetailsScreen>
                                         width: 0.5,
                                       ),
                                     ),
-                                    child: Text(
-                                      weatherError!,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 12,
-                                        color: AppColors.textGrey,
-                                      ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          weatherError!,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 12,
+                                            color: AppColors.textGrey,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        TextButton(
+                                          onPressed: _fetchWeather,
+                                          style: TextButton.styleFrom(
+                                            padding: EdgeInsets.zero,
+                                            minimumSize: Size.zero,
+                                            tapTargetSize: MaterialTapTargetSize
+                                                .shrinkWrap,
+                                          ),
+                                          child: Text(
+                                            'Retry',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.primary,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 )
