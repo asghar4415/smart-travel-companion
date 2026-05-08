@@ -10,6 +10,13 @@ import '../../bloc/theme/theme_state.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import '../../../service_locator.dart';
+import '../../../data/repositories/favorites_repository.dart';
+import '../../bloc/favorites/favorites_event.dart';
+import '../../bloc/places/places_event.dart';
+import '../../bloc/favorites/favorites_bloc.dart';
+import '../../bloc/places/places_bloc.dart';
+import '../../bloc/places/places_state.dart';
 
 class DetailsScreen extends StatefulWidget {
   final PlaceModel place;
@@ -100,11 +107,45 @@ class _DetailsScreenState extends State<DetailsScreen>
     }
   }
 
-  void _toggleFavorite() {
+  Future<void> _toggleFavorite() async {
     setState(() {
       isFavorite = !isFavorite;
     });
-    // TODO: Implement BLoC event to update favorite status
+
+    try {
+      final favoritesRepo = getIt<FavoritesRepository>();
+
+      if (isFavorite) {
+        await favoritesRepo.saveFavorite(
+          widget.place.copyWith(isFavorite: true),
+        );
+      } else {
+        await favoritesRepo.removeFavorite(widget.place.title);
+      }
+
+      // Notify favorites screen to reload
+      if (mounted) {
+        context.read<FavoritesBloc>().add(const GetFavoritesEvent());
+      }
+
+      // Refresh places list so home screen reflects updated favorite status
+      final placesBloc = context.read<PlacesBloc>();
+      if (placesBloc.state is PlacesLoaded) {
+        final state = placesBloc.state as PlacesLoaded;
+        placesBloc.add(RefreshPlacesEvent(location: state.location));
+      }
+    } catch (e) {
+      // revert local state on failure
+      if (mounted) {
+        setState(() {
+          isFavorite = !isFavorite;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update favorite status')),
+        );
+      }
+    }
   }
 
   Future<void> _openInMap() async {

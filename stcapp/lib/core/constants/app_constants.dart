@@ -1,10 +1,8 @@
 class AppConstants {
   // API Related
-  // API base URL: use SerpAPI directly. Mobile platforms do not enforce CORS,
-  // so calling SerpAPI directly from the app is safe for Android/iOS. For web
-  // builds you'll need a CORS proxy (or server-side proxy) because browsers
-  // enforce CORS restrictions.
   static const String apiBaseUrl = 'https://serpapi.com/search.json';
+  // For web builds: use proxy server to avoid CORS errors
+  static const String proxyUrl = 'http://localhost:3000/api/places';
   static const String apiKey =
       '8368fdeebafe2ad402163cd88781d7b6459985d476baa87bf0e3e6d2a413affe';
   static const int apiTimeout = 30; // seconds

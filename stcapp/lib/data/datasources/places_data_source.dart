@@ -22,39 +22,50 @@ class PlacesDataSourceImpl implements PlacesDataSource {
   @override
   Future<PlacesResponseModel> getPlaces(String location) async {
     try {
-      // Build SerpAPI query. For web, calling SerpAPI directly may trigger
-      // CORS errors in the browser; mobile platforms do not enforce CORS.
-      final query = '$location Destinations';
-
-      final uri = Uri.parse(AppConstants.apiBaseUrl).replace(
-        queryParameters: {
-          'engine': 'google',
-          'q': query,
-          'api_key': AppConstants.apiKey,
-        },
-      );
-
       if (kIsWeb) {
-        // On web we avoid crashing; surface a clear error so UI can show
-        // instructions to run a proxy. The app is expected to call SerpAPI
-        // directly on Android/iOS where CORS isn't enforced.
-        throw Exception(
-          'CORS: direct SerpAPI calls are blocked in browsers. Run a proxy for web builds.',
-        );
-      }
+        // On web: use proxy server to bypass CORS restrictions
+        final uri = Uri.parse(
+          AppConstants.proxyUrl,
+        ).replace(queryParameters: {'location': location});
 
-      final response = await client
-          .get(uri)
-          .timeout(Duration(seconds: AppConstants.apiTimeout));
+        final response = await client
+            .get(uri)
+            .timeout(Duration(seconds: AppConstants.apiTimeout));
 
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body) as Map<String, dynamic>;
-        await sharedPreferences.setString(_cacheKey(location), response.body);
-        return PlacesResponseModel.fromJson(jsonData);
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body) as Map<String, dynamic>;
+          await sharedPreferences.setString(_cacheKey(location), response.body);
+          return PlacesResponseModel.fromJson(jsonData);
+        } else {
+          throw Exception(
+            'Failed to load places from proxy. Status code: ${response.statusCode}',
+          );
+        }
       } else {
-        throw Exception(
-          'Failed to load places. Status code: ${response.statusCode}',
+        // On mobile: call SerpAPI directly (no CORS enforcement)
+        final query = '$location Destinations';
+
+        final uri = Uri.parse(AppConstants.apiBaseUrl).replace(
+          queryParameters: {
+            'engine': 'google',
+            'q': query,
+            'api_key': AppConstants.apiKey,
+          },
         );
+
+        final response = await client
+            .get(uri)
+            .timeout(Duration(seconds: AppConstants.apiTimeout));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body) as Map<String, dynamic>;
+          await sharedPreferences.setString(_cacheKey(location), response.body);
+          return PlacesResponseModel.fromJson(jsonData);
+        } else {
+          throw Exception(
+            'Failed to load places. Status code: ${response.statusCode}',
+          );
+        }
       }
     } catch (e) {
       print('Error fetching places from API: $e');
